@@ -70,6 +70,8 @@ my @test_strings = (
 
 );
 
+push @test_strings, make_random_strings( 20 );
+
 my $tmpdir = File::Temp::tempdir();
 
 my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
@@ -98,3 +100,21 @@ for my $dumper ($dumper_orig, $test_dumper) {
 }
 
 done_testing;
+
+sub make_random_strings {
+    my ( $string_count ) = @_;
+
+    my @charsets = map [ map chr, @{$_} ], [ 32 .. 126 ], [ 10, 13, 32 .. 126 ], [ 1 .. 127 ], [ 1 .. 255 ];
+
+    my @strings = map make_random_string( $charsets[ int rand $#charsets + 1 ] ), 0 .. $string_count;
+
+    return @strings;
+}
+
+sub make_random_string {
+    my ( $chars ) = @_;
+
+    my $string = join '', map $chars->[ rand $#$chars + 1 ], 1 .. int rand 70;
+
+    return $string;
+}
