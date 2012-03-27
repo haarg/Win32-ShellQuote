@@ -7,7 +7,7 @@ our @EXPORT_OK = qw(quote_as_list quote_as_string quote_literal);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
 sub quote_as_list {
-	my @args = @_;
+    my @args = @_;
 
     return map { quote_literal($_) } @args;
 }
@@ -26,7 +26,7 @@ sub quote_as_string {
 }
 
 sub cmd_escape {
-	my $string = shift;
+    my $string = shift;
     $string =~ s/([()%!^"<>&|])/^$1/g;
     return $string;
 }
