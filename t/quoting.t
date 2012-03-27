@@ -51,6 +51,23 @@ my @test_strings = (
     "\n",
     "a\nb",
     "a\rb",
+
+# from EUMM.  Not all meant to be used like this, but still good test material
+    q{print "foo'o", ' bar"ar'},
+    q{$PATH = 'foo'; print $PATH},
+    q{print 'foo'},
+    q{print " \" "},
+    q{print " < \" "},
+    q{print " \" < "},
+    q{print " < \"\" < \" < \" < "},
+    q{print " < \" | \" < | \" < \" < "},
+
+    q{print q[ &<>^|()@ ! ]}, [],  q{ &<>^|()@ ! },
+    q{print q[ &<>^|@()!"&<>^|@()! ]},
+    q{print q[ "&<>^|@() !"&<>^|@() !" ]},
+    q{print q[ "C:\TEST A\" ]},
+    q{print q[ "C:\TEST %&^ A\" ]},
+
 );
 
 my $tmpdir = File::Temp::tempdir();
