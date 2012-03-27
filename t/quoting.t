@@ -70,6 +70,8 @@ my @test_strings = (
 
 );
 
+push @test_strings, make_random_strings( 20 );
+
 my $tmpdir = File::Temp::tempdir();
 
 my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
@@ -80,21 +82,41 @@ File::Copy::cp($dumper_orig, $test_dumper);
 
 for my $dumper ($dumper_orig, $test_dumper) {
     note "testing with $dumper";
-    for my $string (@test_strings) {
-        {
-            my $out = eval capture { system quote_as_list($^X, $dumper, $string, $string) };
-            is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as list';
-            is $out->[0], $string, 'roundtrip ' . dd($string) . ' as list';
-            is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as list';
-        }
+    for my $string ( @test_strings ) {
+        subtest "string: " . dd( $string ) => sub {
+            {
+                my $out = eval capture { system quote_as_list($^X, $dumper, $string, $string) };
+                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as list';
+                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as list';
+                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as list';
+            }
 
-        {
-            my $out = eval capture { system quote_as_string($^X, $dumper, $string, $string) };
-            is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as string';
-            is $out->[0], $string, 'roundtrip ' . dd($string) . ' as string';
-            is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as string';
-        }
+            {
+                my $out = eval capture { system quote_as_string($^X, $dumper, $string, $string) };
+                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as string';
+                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as string';
+                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as string';
+            }
+        };
     }
 }
 
 done_testing;
+
+sub make_random_strings {
+    my ( $string_count ) = @_;
+
+    my @charsets = map [ map chr, @{$_} ], [ 32 .. 126 ], [ 10, 13, 32 .. 126 ], [ 1 .. 127 ], [ 1 .. 255 ];
+
+    my @strings = map make_random_string( $charsets[ int rand $#charsets + 1 ] ), 0 .. $string_count;
+
+    return @strings;
+}
+
+sub make_random_string {
+    my ( $chars ) = @_;
+
+    my $string = join '', map $chars->[ rand $#$chars + 1 ], 1 .. int rand 70;
+
+    return $string;
+}
