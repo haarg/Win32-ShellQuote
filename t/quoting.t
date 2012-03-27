@@ -82,20 +82,22 @@ File::Copy::cp($dumper_orig, $test_dumper);
 
 for my $dumper ($dumper_orig, $test_dumper) {
     note "testing with $dumper";
-    for my $string (@test_strings) {
-        {
-            my $out = eval capture { system quote_as_list($^X, $dumper, $string, $string) };
-            is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as list';
-            is $out->[0], $string, 'roundtrip ' . dd($string) . ' as list';
-            is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as list';
-        }
+    for my $string ( @test_strings ) {
+        subtest "string: " . dd( $string ) => sub {
+            {
+                my $out = eval capture { system quote_as_list($^X, $dumper, $string, $string) };
+                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as list';
+                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as list';
+                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as list';
+            }
 
-        {
-            my $out = eval capture { system quote_as_string($^X, $dumper, $string, $string) };
-            is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as string';
-            is $out->[0], $string, 'roundtrip ' . dd($string) . ' as string';
-            is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as string';
-        }
+            {
+                my $out = eval capture { system quote_as_string($^X, $dumper, $string, $string) };
+                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as string';
+                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as string';
+                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as string';
+            }
+        };
     }
 }
 
