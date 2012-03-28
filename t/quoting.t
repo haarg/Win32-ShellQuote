@@ -9,6 +9,10 @@ use Data::Dumper;
 use File::Temp;
 use File::Copy ();
 
+if ($^O ne 'MSWin32') {
+    plan skip_all => "can only test for valid quoting on Win32";
+}
+
 sub dd {
     my $string = shift;
     local $Data::Dumper::Terse = 1;
