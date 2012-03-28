@@ -3,27 +3,59 @@ use strict;
 use warnings;
 use Exporter qw(import);
 
-our @EXPORT_OK = qw(quote_as_list quote_as_string quote_literal);
+our @EXPORT_OK = qw(
+    quote_native
+    quote_cmd
+    quote_system_list
+    quote_system_string
+    quote_system
+    quote_system_cmd
+    quote_literal
+    cmd_escape
+);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
-sub quote_as_list {
-    my @args = @_;
-
-    return map { quote_literal($_) } @args;
+sub quote_native {
+    return join q{ }, quote_system_list(@_);
 }
 
-sub quote_as_string {
-    my @args = @_;
+sub quote_cmd {
+    return cmd_escape(quote_native(@_));
+}
 
-    my $args = join ' ', quote_as_list(@args);
+sub quote_system_list {
+    return map { quote_literal($_) } @_;
+}
+
+sub quote_system_string {
+    my $args = quote_native(@_);
 
     if (_has_shell_metachars($args)) {
-        # cmd.exe treats quotes differently from standard
-        # argument parsing. just escape everything using ^.
         $args = cmd_escape($args);
     }
     return $args;
 }
+
+sub quote_system {
+    if (@_ > 1) {
+        return quote_system_list(@_);
+    }
+    else {
+        return quote_system_string(@_);
+    }
+}
+
+sub quote_system_cmd {
+    # force cmd, even when running through system
+    my $args = quote_native(@_);
+
+    if (! _has_shell_metachars($args)) {
+        # IT BURNS LOOK AWAY
+        return '%PATH:~0,0%' . cmd_escape($args);
+    }
+    return cmd_escape($args);
+}
+
 
 sub cmd_escape {
     my $string = shift;
