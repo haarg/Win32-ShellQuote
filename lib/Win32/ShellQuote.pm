@@ -2,9 +2,12 @@ package Win32::ShellQuote;
 use strict;
 use warnings;
 use Exporter qw(import);
+use Carp;
 
 our $VERSION = '0.001';
 $VERSION = eval $VERSION;
+
+$Carp::Internal{ (__PACKAGE__) }++;
 
 our @EXPORT_OK = qw(
     quote_native
@@ -62,6 +65,9 @@ sub quote_system_cmd {
 
 sub cmd_escape {
     my $string = shift;
+    if ($string =~ /[\r\n\0]/) {
+        croak "can't quote newlines to pass through cmd.exe";
+    }
     $string =~ s/([()%!^"<>&|])/^$1/g;
     return $string;
 }
