@@ -1,0 +1,16 @@
+^\.git
+^MANIFEST\.
+^Makefile$
+^Makefile\.old$
+^blib/
+^MakeMaker-\d
+~$
+\.old$
+^#.*#$
+^\.#
+^pm_to_blib$
+^MYMETA\.json$
+^MYMETA\.yml$
+
+^Win32-ShellQuote-
+

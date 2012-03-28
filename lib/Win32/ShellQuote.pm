@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use Exporter qw(import);
 
+our $VERSION = '0.001';
+$VERSION = eval $VERSION;
+
 our @EXPORT_OK = qw(
     quote_native
     quote_cmd
