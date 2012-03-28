@@ -8,6 +8,7 @@ my %WriteMakefileArgs = (
         'Capture::Tiny' => 0,
         'File::Spec' => 0,
         'File::Basename' => 0,
+        'Try::Tiny' => 0,
     },
     'CONFIGURE_REQUIRES' => {
         'ExtUtils::MakeMaker' => '6.30'

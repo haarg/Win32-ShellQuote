@@ -8,6 +8,7 @@ use Capture::Tiny qw(capture capture_stdout);
 use Data::Dumper ();
 use File::Temp;
 use File::Copy ();
+use Try::Tiny;
 
 if ($^O ne 'MSWin32') {
     plan skip_all => "can only test for valid quoting on Win32";
@@ -28,21 +29,47 @@ File::Copy::cp($dumper_orig, $test_dumper);
 sub test_params {
     my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
     subtest "string: " . dd( \@test_strings ) => sub {
+        plan tests => 18;
         for my $dumper ($dumper_orig, $test_dumper) {
-            for my $params ( [@test_strings], [@test_strings, '>out'] ) {
-                {
+            for my $params ( [@test_strings], [@test_strings, '>out'], [@test_strings, '%']  ) {
+                try {
                     my $out = eval capture_stdout { system quote_system_list($^X, $dumper, @$params) };
                     is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as list';
                 }
+                catch {
+                    fail 'roundtrip ' . dd($params) . ' as list';
+                    chomp;
+                    diag $_;
+                };
 
-                {
-                    my $out = eval capture_stdout { system quote_system_string($^X, $dumper, @$params) };
-                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as string';
+                TODO: {
+                    local $TODO = 'forced to use cmd, but using non-escapable characters'
+                        if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
+                        && grep { /[\r\n\0]/ } @$params;
+                    try {
+                        my $out = eval capture_stdout { system quote_system_string($^X, $dumper, @$params) };
+                        is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as string';
+                    }
+                    catch {
+                        fail 'roundtrip ' . dd($params) . ' as string';
+                        chomp;
+                        diag $_;
+                    };
                 }
 
-                {
-                    my $out = eval capture_stdout { system quote_system_cmd($^X, $dumper, @$params) };
-                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as cmd';
+                TODO: {
+                    local $TODO = "newlines don't play well with cmd"
+                        if grep { /[\r\n\0]/ } @$params;
+                    try {
+                        my $out = eval capture_stdout { system quote_system_cmd($^X, $dumper, @$params) };
+                        is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as cmd';
+                    }
+                    catch {
+                        fail 'roundtrip ' . dd($params) . ' as cmd';
+                        chomp;
+                        diag $_;
+                    };
+
                 }
             }
         }
@@ -66,7 +93,6 @@ test_params($_) for (
     '\\ a',
     '\\ "\' a',
     [ '\\ "\' a', ">\\"],
-    [ '\\ "\' a', "a\">b"],
     '%a%',
     '%a b',
     '\%a b',
@@ -93,27 +119,15 @@ test_params($_) for (
     q{print q[ "C:\TEST A\" ]},
     q{print q[ "C:\TEST %&^ A\" ]},
 
+    "\n",
+    "a\nb",
+    "a\rb",
+    "a\nb > welp",
+    "a > welp\n219",
+    "a\"b\nc",
+
+    make_random_strings( 20 ),
 );
-
-my @random = make_random_strings( 20 );
-
-test_params($_)
-    for grep { ! /[\r\n\0]/ } @random;
-@random = grep { /[\r\n\0]/ } @random;
-
-
-TODO: {
-    local $TODO = "newlines don't play well with cmd";
-
-    test_params($_) for (
-        "\n",
-        "a\nb",
-        "a\rb",
-        "a\nb > welp",
-        "a > welp\n219",
-        @random,
-    );
-}
 
 done_testing;
 
