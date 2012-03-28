@@ -4,8 +4,8 @@ use Test::More;
 use File::Basename ();
 use File::Spec;
 use Win32::ShellQuote qw(:all);
-use Capture::Tiny qw(capture);
-use Data::Dumper;
+use Capture::Tiny qw(capture capture_stdout);
+use Data::Dumper ();
 use File::Temp;
 use File::Copy ();
 
@@ -13,21 +13,43 @@ if ($^O ne 'MSWin32') {
     plan skip_all => "can only test for valid quoting on Win32";
 }
 
-sub dd {
-    my $string = shift;
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Useqq
-        = grep { /[\r\n']/ } ref $string ? @$string : $string;
-    my $out = Data::Dumper::Dumper($string);
-    chomp $out;
-    return $out;
-}
-
 my $dumper_orig = File::Spec->rel2abs(
     File::Spec->catfile(File::Basename::dirname(__FILE__), 'dump_args.pl')
 );
 
-my @test_strings = (
+my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
+
+my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
+mkdir $test_dir;
+
+my $test_dumper = File::Spec->catfile($test_dir, 'dumper with spaces.pl');
+File::Copy::cp($dumper_orig, $test_dumper);
+
+sub test_params {
+    my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
+    subtest "string: " . dd( \@test_strings ) => sub {
+        for my $dumper ($dumper_orig, $test_dumper) {
+            for my $params ( [@test_strings], [@test_strings, '>out'] ) {
+                {
+                    my $out = eval capture_stdout { system quote_system_list($^X, $dumper, @$params) };
+                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as list';
+                }
+
+                {
+                    my $out = eval capture_stdout { system quote_system_string($^X, $dumper, @$params) };
+                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as string';
+                }
+
+                {
+                    my $out = eval capture_stdout { system quote_system_cmd($^X, $dumper, @$params) };
+                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as cmd';
+                }
+            }
+        }
+    };
+}
+
+test_params($_) for (
     'a',
     'a b',
     '"a b"',
@@ -43,6 +65,8 @@ my @test_strings = (
     '\\"a',
     '\\ a',
     '\\ "\' a',
+    [ '\\ "\' a', ">\\"],
+    [ '\\ "\' a', "a\">b"],
     '%a%',
     '%a b',
     '\%a b',
@@ -52,9 +76,6 @@ my @test_strings = (
     '" | welp"',
     '\" | welp',
     "",
-    "\n",
-    "a\nb",
-    "a\rb",
 
 # from EUMM.  Not all meant to be used like this, but still good test material
     q{print "foo'o", ' bar"ar'},
@@ -74,38 +95,38 @@ my @test_strings = (
 
 );
 
-push @test_strings, make_random_strings( 20 );
+my @random = make_random_strings( 20 );
 
-my $tmpdir = File::Temp::tempdir();
+test_params($_)
+    for grep { ! /[\r\n\0]/ } @random;
+@random = grep { /[\r\n\0]/ } @random;
 
-my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
-mkdir $test_dir;
 
-my $test_dumper = File::Spec->catfile($test_dir, 'dumper with spaces.pl');
-File::Copy::cp($dumper_orig, $test_dumper);
+TODO: {
+    local $TODO = "newlines don't play well with cmd";
 
-for my $dumper ($dumper_orig, $test_dumper) {
-    note "testing with $dumper";
-    for my $string ( @test_strings ) {
-        subtest "string: " . dd( $string ) => sub {
-            {
-                my $out = eval capture { system quote_as_list($^X, $dumper, $string, $string) };
-                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as list';
-                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as list';
-                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as list';
-            }
-
-            {
-                my $out = eval capture { system quote_as_string($^X, $dumper, $string, $string) };
-                is scalar @$out, 2, 'correct # of args for ' . dd($string) . ' as string';
-                is $out->[0], $string, 'roundtrip ' . dd($string) . ' as string';
-                is $out->[0], $out->[1], 'both args match for ' . dd($string) . ' as string';
-            }
-        };
-    }
+    test_params($_) for (
+        "\n",
+        "a\nb",
+        "a\rb",
+        "a\nb > welp",
+        "a > welp\n219",
+        @random,
+    );
 }
 
 done_testing;
+
+sub dd {
+    my $string = shift;
+    local $Data::Dumper::Indent = 0;
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Useqq
+        = grep { /[\r\n']/ } ref $string ? @$string : $string;
+    my $out = Data::Dumper::Dumper($string);
+    chomp $out;
+    return $out;
+}
 
 sub make_random_strings {
     my ( $string_count ) = @_;
