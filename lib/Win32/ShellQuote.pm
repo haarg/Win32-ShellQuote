@@ -81,7 +81,7 @@ sub quote_literal {
         # no quoting needed
     }
     else {
-        my @text = split '', $text;
+        my @text = split //, $text;
         $text = q{"};
         for (my $i = 0; ; $i++) {
             my $bs_count = 0;
@@ -113,7 +113,7 @@ sub _has_shell_metachars {
     my $inquote = 0;
     my $quote = '';
 
-    my @string = split '', $string;
+    my @string = split //, $string;
     for my $char (@string) {
         if ($char eq q{%}) {
             return 1;
