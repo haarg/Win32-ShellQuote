@@ -30,7 +30,7 @@ sub quote_cmd {
 }
 
 sub quote_system_list {
-    return map { quote_literal($_) } @_;
+    return map { quote_literal($_, 1) } @_;
 }
 
 sub quote_system_string {
@@ -73,11 +73,11 @@ sub cmd_escape {
 }
 
 sub quote_literal {
-    my ($text) = @_;
+    my ($text, $force) = @_;
 
     # basic argument quoting.  uses backslashes and quotes to escape
     # everything.
-    if ($text ne '' && $text !~ /[ \t\n\v"]/) {
+    if (!$force && $text ne '' && $text !~ /[ \t\n\v"]/) {
         # no quoting needed
     }
     else {
