@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use Test::More;
 use File::Basename ();
 use File::Spec;

@@ -1,6 +1,6 @@
 package Win32::ShellQuote;
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use Exporter qw(import);
 use Carp;
 
