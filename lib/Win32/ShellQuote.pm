@@ -182,7 +182,7 @@ possible.
 
 =head2 quote_cmd
 
-Quotes as a string to be run through cmd.exe, such as in a batch file.
+Quotes as a string to be run through F<cmd.exe>, such as in a batch file.
 
 =head2 quote_system_list
 
@@ -219,24 +219,32 @@ Escapes a string to be passed untouched by F<cmd.exe>.
 
 =item *
 
-Newlines (\n or \r) can't be properly quoted when running through F<cmd.exe>.
+Newlines (\n or \r) and null (\0) can't be properly quoted when
+running through F<cmd.exe>.
 
 =item *
 
-Some functions rely on undocumented parts of the perl internals
-that have been re-implemented in this module.
+This module re-implements some under-specified part of the perl
+internals to accurately perform its work.
 
 =back
 
 =head1 AUTHOR
 
-Graham Knop <haarg@haarg.org>
+haarg - Graham Knop (cpan:HAARG) <haarg@haarg.org>
+
+=head1 CONTRIBUTORS
+
+Mithaldu - Christian Walde (cpan:MITHALDU) <walde.christian@googlemail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 by Graham Knop.
+Copyright (c) 2012 the L</AUTHOR> and L</CONTRIBUTORS>
+as listed above.
 
-This is free software; you can redistribute it and/or modify it under the same terms as the Perl 5 programming language system itself.
+This is free software; you can redistribute it and/or modify it
+under the same terms as the Perl 5 programming language system
+itself.
 
 =cut
 
