@@ -1,2 +1,5 @@
+0.001001 Apr 19 2012
+ - Set proper Capture::Tiny prereq version
+
 0.001000 Apr 4 2012
  - Initial release
