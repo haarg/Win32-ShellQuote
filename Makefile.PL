@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker 6.30;
 my %WriteMakefileArgs = (
     'AUTHOR' => 'Graham Knop <haarg@haarg.org>',
     'BUILD_REQUIRES' => {
-        'Test::More' => 0,
+        'Test::More' => 0.94,
         'Capture::Tiny' => 0.12,
         'File::Spec' => 0,
         'File::Basename' => 0,
