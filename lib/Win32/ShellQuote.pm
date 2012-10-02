@@ -89,36 +89,14 @@ sub quote_literal {
     return $text;
 }
 
-# direct port of code from win32.c
+# derived from rules in code in win32.c
 sub _has_shell_metachars {
     my $string = shift;
-    my $inquote = 0;
-    my $quote = '';
 
-    my @string = split //, $string;
-    for my $char (@string) {
-        if ($char eq q{%}) {
-            return 1;
-        }
-        elsif ($char eq q{'} || $char eq q{"}) {
-            if ($inquote) {
-                if ($char eq $quote) {
-                    $inquote = 0;
-                    $quote = '';
-                }
-            }
-            else {
-                $quote = $char;
-                $inquote++;
-            }
-        }
-        elsif ($char eq q{<} || $char eq q{>} || $char eq q{|}) {
-            if ( ! $inquote) {
-                return 1;
-            }
-        }
-    }
-    return;
+    return 1
+        if $string =~ /%/;
+    $string =~ s/(['"]).*?(\1|\z)//;
+    return $string =~ /[<>|]/;
 }
 
 1;
@@ -185,7 +163,7 @@ based on the number of items quoted.
 
 =head2 quote_system_cmd
 
-Quotes as a single string that will always be run with F<cmd.exe>
+Quotes as a single string that will always be run with F<cmd.exe>.
 
 =head2 quote_literal
 
