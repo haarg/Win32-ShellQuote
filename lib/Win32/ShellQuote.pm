@@ -81,27 +81,9 @@ sub quote_literal {
         # no quoting needed
     }
     else {
-        my @text = split //, $text;
-        $text = q{"};
-        for (my $i = 0; ; $i++) {
-            my $bs_count = 0;
-            while ( $i < @text && $text[$i] eq "\\" ) {
-                $i++;
-                $bs_count++;
-            }
-            if ($i > $#text) {
-                $text .= "\\" x ($bs_count * 2);
-                last;
-            }
-            elsif ($text[$i] eq q{"}) {
-                $text .= "\\" x ($bs_count * 2 + 1);
-            }
-            else {
-                $text .= "\\" x $bs_count;
-            }
-            $text .= $text[$i];
-        }
-        $text .= q{"};
+        $text =~ s{(\\*)(?="|\z)}{$1$1}g;
+        $text =~ s{"}{\\"}g;
+        $text = qq{"$text"};
     }
 
     return $text;
