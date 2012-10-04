@@ -1,3 +1,8 @@
+0.002000 Oct 4 2012
+ - Simplify quoting and metacharacter detection to use regexes
+   instead of character loops.
+ - Don't run random string tests unless in author mode
+
 0.001001 Apr 19 2012
  - Set proper Capture::Tiny prereq version
 

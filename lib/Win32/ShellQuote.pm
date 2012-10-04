@@ -4,7 +4,7 @@ use warnings FATAL => 'all';
 use Exporter qw(import);
 use Carp;
 
-our $VERSION = '0.001001';
+our $VERSION = '0.002000';
 $VERSION = eval $VERSION;
 
 $Carp::Internal{ (__PACKAGE__) }++;
