@@ -195,7 +195,11 @@ haarg - Graham Knop (cpan:HAARG) <haarg@haarg.org>
 
 =head1 CONTRIBUTORS
 
-Mithaldu - Christian Walde (cpan:MITHALDU) <walde.christian@googlemail.com>
+=over 8
+
+=item Mithaldu - Christian Walde (cpan:MITHALDU) <walde.christian@googlemail.com>
+
+=back
 
 =head1 COPYRIGHT AND LICENSE
 
