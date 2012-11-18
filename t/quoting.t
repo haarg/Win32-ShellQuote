@@ -126,6 +126,10 @@ test_params($_) for (
     "a > welp\n219",
     "a\"b\nc",
 
+    "a\fb",
+    "a\x0bb",
+    "a\x{85}b",
+
     $ENV{AUTHOR_TESTING} ? make_random_strings( 20 ) : (),
 );
 

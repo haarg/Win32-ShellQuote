@@ -77,7 +77,7 @@ sub quote_literal {
 
     # basic argument quoting.  uses backslashes and quotes to escape
     # everything.
-    if (!$force && $text ne '' && $text !~ /[ \t\n\v"]/) {
+    if (!$force && $text ne '' && $text !~ /[ \t\n\x0b"]/) {
         # no quoting needed
     }
     else {
