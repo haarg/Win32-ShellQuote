@@ -197,7 +197,7 @@ haarg - Graham Knop (cpan:HAARG) <haarg@haarg.org>
 
 =over 8
 
-=item Mithaldu - Christian Walde (cpan:MITHALDU) <walde.christian@googlemail.com>
+=item * Mithaldu - Christian Walde (cpan:MITHALDU) <walde.christian@googlemail.com>
 
 =back
 
