@@ -22,7 +22,7 @@ my %WriteMakefileArgs = (
     'PREREQ_PM' => {
         'strict' => 0,
         'warnings' => 0,
-        'Exporter' => 0,
+        'Exporter' => 5.57,
         'Carp' => 0,
     },
     'META_ADD' => {
