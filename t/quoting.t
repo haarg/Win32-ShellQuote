@@ -4,21 +4,30 @@ use Test::More;
 use File::Basename ();
 use File::Spec;
 use Win32::ShellQuote qw(:all);
-use Capture::Tiny qw(capture capture_stdout);
-use Data::Dumper ();
+use Capture::Tiny qw(capture_merged);
 use File::Temp;
 use File::Copy ();
 use Try::Tiny;
+use Cwd ();
 
 if ($^O ne 'MSWin32') {
     plan skip_all => "can only test for valid quoting on Win32";
 }
 
-my $dumper_orig = File::Spec->rel2abs(
-    File::Spec->catfile(File::Basename::dirname(__FILE__), 'dump_args.pl')
-);
+my $dumper_orig;
+
+BEGIN {
+    $dumper_orig = File::Spec->rel2abs(
+      File::Spec->catfile(File::Basename::dirname(__FILE__), 'dump_args.pl'));
+    require $dumper_orig;
+}
+
+sub TestGuard::DESTROY { $_[0]->(); }
+my $cwd = Cwd::cwd;
+my $guard = bless sub { chdir $cwd }, 'TestGuard';
 
 my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
+chdir $tmpdir;
 
 my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
 mkdir $test_dir;
@@ -29,50 +38,58 @@ File::Copy::cp($dumper_orig, $test_dumper);
 sub test_params {
     my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
     subtest "string: " . dd( \@test_strings ) => sub {
-        plan tests => 18;
+        plan tests => 2*2*3*3;
+        for my $perl ([1, $^X], [0, 'IF', 'NOT', 'foo==bar', $^X]) {
+            my ($pass, @perl) = @$perl;
+            my $cmp = $pass ? 'eq' : 'ne';
+            note "using perl: @perl";
+
         for my $dumper ($dumper_orig, $test_dumper) {
-            for my $params ( [@test_strings], [@test_strings, '>out'], [@test_strings, '%']  ) {
+            note "using dumper: $dumper";
+
+        for my $params ( [@test_strings], [@test_strings, '>out'], [@test_strings, '%']  ) {
+            my $name = ($pass ? '' : "don't ") . 'roundtrip ' . dd($params) . ($pass ? '' : ' with bad perl path');
+
+            try {
+                my $out = capture_merged { system quote_system_list(@perl, $dumper, @$params) };
+                cmp_ok $out, $cmp, dd $params, "$name as list";
+            }
+            catch {
+                fail "$name as list";
+                chomp;
+                diag $_;
+            };
+
+            TODO: {
+                local $TODO = 'forced to use cmd, but using non-escapable characters'
+                    if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
+                    && grep { /[\r\n\0]/ } @$params;
                 try {
-                    my $out = eval capture_stdout { system quote_system_list($^X, $dumper, @$params) };
-                    is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as list';
+                    my $out = capture_merged { system quote_system_string(@perl, $dumper, @$params) };
+                    cmp_ok $out, $cmp, dd $params, "$name as string";
                 }
                 catch {
-                    fail 'roundtrip ' . dd($params) . ' as list';
+                    fail "$name as string";
+                    chomp;
+                    diag $_;
+                };
+            }
+
+            TODO: {
+                local $TODO = "newlines don't play well with cmd"
+                    if grep { /[\r\n\0]/ } @$params;
+                try {
+                    my $out = capture_merged { system quote_system_cmd(@perl, $dumper, @$params) };
+                    cmp_ok $out, $cmp, dd $params, "$name as cmd";
+                }
+                catch {
+                    fail "$name as cmd";
                     chomp;
                     diag $_;
                 };
 
-                TODO: {
-                    local $TODO = 'forced to use cmd, but using non-escapable characters'
-                        if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
-                        && grep { /[\r\n\0]/ } @$params;
-                    try {
-                        my $out = eval capture_stdout { system quote_system_string($^X, $dumper, @$params) };
-                        is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as string';
-                    }
-                    catch {
-                        fail 'roundtrip ' . dd($params) . ' as string';
-                        chomp;
-                        diag $_;
-                    };
-                }
-
-                TODO: {
-                    local $TODO = "newlines don't play well with cmd"
-                        if grep { /[\r\n\0]/ } @$params;
-                    try {
-                        my $out = eval capture_stdout { system quote_system_cmd($^X, $dumper, @$params) };
-                        is_deeply $out, $params, 'roundtrip ' . dd($params) . ' as cmd';
-                    }
-                    catch {
-                        fail 'roundtrip ' . dd($params) . ' as cmd';
-                        chomp;
-                        diag $_;
-                    };
-
-                }
             }
-        }
+        } } }
     };
 }
 
@@ -134,17 +151,6 @@ test_params($_) for (
 );
 
 done_testing;
-
-sub dd {
-    my $string = shift;
-    local $Data::Dumper::Indent = 0;
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Useqq
-        = grep { /[\r\n']/ } ref $string ? @$string : $string;
-    my $out = Data::Dumper::Dumper($string);
-    chomp $out;
-    return $out;
-}
 
 sub make_random_strings {
     my ( $string_count ) = @_;
