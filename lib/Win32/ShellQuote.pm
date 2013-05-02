@@ -30,6 +30,7 @@ sub quote_cmd {
 }
 
 sub quote_system_list {
+    # have to force quoting, or perl might try to use cmd anyway
     return map { quote_literal($_, 1) } @_;
 }
 
