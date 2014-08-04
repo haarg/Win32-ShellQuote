@@ -1,7 +1,7 @@
 package Win32::ShellQuote;
 use strict;
 use warnings FATAL => 'all';
-use Exporter qw(import);
+use base 'Exporter';
 use Carp;
 
 our $VERSION = '0.002001';
