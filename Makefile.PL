@@ -12,6 +12,9 @@ my %META = (
         'Try::Tiny' => 0,
       },
     },
+    runtime => { requires => {
+      perl => '5.006',
+    }, },
   },
   'name' => 'Win32-ShellQuote',
   'license' => 'perl_5',
