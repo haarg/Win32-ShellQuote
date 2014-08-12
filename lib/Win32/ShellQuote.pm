@@ -7,8 +7,6 @@ use Carp;
 our $VERSION = '0.002001';
 $VERSION = eval $VERSION;
 
-$Carp::Internal{ (__PACKAGE__) }++;
-
 our @EXPORT_OK = qw(
     quote_native
     quote_cmd
