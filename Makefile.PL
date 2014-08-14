@@ -16,6 +16,18 @@ my %META = (
       perl => '5.006',
     }, },
   },
+  resources => {
+    repository => {
+      type => 'git',
+      url => 'git://github.com/haarg/Win32-ShellQuote.git',
+      web => 'https://github.com/haarg/Win32-ShellQuote',
+    },
+    bugtracker => {
+      mailto => 'bug-Win32-ShellQuote@rt.cpan.org',
+      web => 'https://rt.cpan.org/Dist/Display.html?Name=Win32-ShellQuote',
+    },
+    license => [ 'http://dev.perl.org/licenses/' ],
+  },
   'name' => 'Win32-ShellQuote',
   'license' => 'perl_5',
   'dynamic_config' => 0,
