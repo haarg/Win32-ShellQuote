@@ -1,3 +1,7 @@
+ - be compatible with older Exporter
+ - more extensive testing
+ - include additional metadata
+
 0.002001 Nov 18 2012
  - Fix escape code used for vertical tab, which fixes perl 5.8 compatibility.
 
