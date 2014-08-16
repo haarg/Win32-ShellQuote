@@ -4,7 +4,7 @@ use warnings FATAL => 'all';
 use base 'Exporter';
 use Carp;
 
-our $VERSION = '0.002001';
+our $VERSION = '0.002002';
 $VERSION = eval $VERSION;
 
 our @EXPORT_OK = qw(
