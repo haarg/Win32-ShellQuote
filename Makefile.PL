@@ -9,7 +9,6 @@ my %META = (
         'Capture::Tiny' => 0.12,
         'File::Spec' => 0,
         'File::Basename' => 0,
-        'Try::Tiny' => 0,
       },
     },
     runtime => { requires => {

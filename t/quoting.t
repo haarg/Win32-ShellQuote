@@ -7,7 +7,6 @@ use Win32::ShellQuote qw(:all);
 use Capture::Tiny qw(capture_merged);
 use File::Temp;
 use File::Copy ();
-use Try::Tiny;
 use Cwd ();
 
 if ($^O ne 'MSWin32') {
@@ -50,44 +49,43 @@ sub test_params {
         for my $params ( [@test_strings], [@test_strings, '>out'], [@test_strings, '%']  ) {
             my $name = ($pass ? '' : "don't ") . 'roundtrip ' . dd($params) . ($pass ? '' : ' with bad perl path');
 
-            try {
+            eval {
                 my $out = capture_merged { system quote_system_list(@perl, $dumper, @$params) };
                 cmp_ok $out, $cmp, dd $params, "$name as list";
-            }
-            catch {
-                fail "$name as list";
-                chomp;
-                diag $_;
             };
+            if (my $e = $@) {
+                fail "$name as list";
+                chomp $e;
+                diag $e;
+            }
 
             TODO: {
                 local $TODO = 'forced to use cmd, but using non-escapable characters'
                     if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
                     && grep { /[\r\n\0]/ } @$params;
-                try {
+                eval {
                     my $out = capture_merged { system quote_system_string(@perl, $dumper, @$params) };
                     cmp_ok $out, $cmp, dd $params, "$name as string";
-                }
-                catch {
-                    fail "$name as string";
-                    chomp;
-                    diag $_;
                 };
+                if (my $e = $@) {
+                    fail "$name as string";
+                    chomp $e;
+                    diag $e;
+                }
             }
 
             TODO: {
                 local $TODO = "newlines don't play well with cmd"
                     if grep { /[\r\n\0]/ } @$params;
-                try {
+                eval {
                     my $out = capture_merged { system quote_system_cmd(@perl, $dumper, @$params) };
                     cmp_ok $out, $cmp, dd $params, "$name as cmd";
-                }
-                catch {
-                    fail "$name as cmd";
-                    chomp;
-                    diag $_;
                 };
-
+                if (my $e = $@) {
+                    fail "$name as cmd";
+                    chomp $e;
+                    diag $e;
+                }
             }
         } } }
     };
