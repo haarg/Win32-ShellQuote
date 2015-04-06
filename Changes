@@ -1,18 +1,20 @@
+Release history for Win32-ShellQuote
+
 0.002002 - 2014-08-16
- - be compatible with older Exporter
- - more extensive testing
- - include additional metadata
+  - be compatible with older Exporter
+  - more extensive testing
+  - include additional metadata
 
-0.002001 Nov 18 2012
- - Fix escape code used for vertical tab, which fixes perl 5.8 compatibility.
+0.002001 - 2012-11-18
+  - Fix escape code used for vertical tab, which fixes perl 5.8 compatibility.
 
-0.002000 Oct 4 2012
- - Simplify quoting and metacharacter detection to use regexes
-   instead of character loops.
- - Don't run random string tests unless in author mode
+0.002000 - 2012-10-04
+  - Simplify quoting and metacharacter detection to use regexes
+    instead of character loops.
+  - Don't run random string tests unless in author mode
 
-0.001001 Apr 19 2012
- - Set proper Capture::Tiny prereq version
+0.001001 - 2012-04-19
+  - Set proper Capture::Tiny prereq version
 
-0.001000 Apr 4 2012
- - Initial release
+0.001000 - 2012-04-04
+  - Initial release
