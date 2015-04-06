@@ -20,9 +20,9 @@ BEGIN {
     require $dumper_orig;
 }
 
-sub TestGuard::DESTROY { $_[0]->(); }
+sub TestGuard::DESTROY { $_[0][0]->(); }
 my $cwd = Cwd::cwd;
-my $guard = bless sub { chdir $cwd }, 'TestGuard';
+my $guard = bless [ sub { chdir $cwd } ], 'TestGuard';
 
 my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
 chdir $tmpdir;
