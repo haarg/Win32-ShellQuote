@@ -1,5 +1,6 @@
 Release history for Win32-ShellQuote
 
+0.002003 - 2015-04-06
   - drop all non-core prerequisites
 
 0.002002 - 2014-08-16
