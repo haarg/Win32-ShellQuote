@@ -6,7 +6,6 @@ my %META = (
     test => {
       requires => {
         'Test::More' => 0.94,
-        'Capture::Tiny' => 0.12,
         'File::Spec' => 0,
         'File::Basename' => 0,
       },

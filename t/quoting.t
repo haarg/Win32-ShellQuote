@@ -4,7 +4,6 @@ use Test::More;
 use File::Basename ();
 use File::Spec;
 use Win32::ShellQuote qw(:all);
-use Capture::Tiny qw(capture_merged);
 use File::Temp;
 use File::Copy ();
 use Cwd ();
@@ -34,6 +33,26 @@ mkdir $test_dir;
 my $test_dumper = File::Spec->catfile($test_dir, 'dumper with spaces.pl');
 File::Copy::cp($dumper_orig, $test_dumper);
 
+sub capture (&) {
+    my ($sub) = @_;
+    open my $oldout, '>&', \*STDOUT or die "can't dup STDOUT: $!";
+    open my $olderr, '>&', \*STDERR or die "can't dup STDERR: $!";
+    my ($fh, $filename) = File::Temp::tempfile( 'win32-shellquote-XXXXXX', TMPDIR => 1 );
+    open STDOUT, '>&', $fh or die "can't dup temp fh: $!";;
+    open STDERR, '>&', $fh or die "can't dup temp fh: $!";;
+    my ($e, $fail);
+    if (!eval { $sub->(); 1 }) {
+        ($e, $fail) = ($@, 1);
+    }
+    open STDOUT, '>&', $oldout or die "can't restore STDOUT: $!";
+    open STDERR, '>&', $olderr or die "can't restore STDERR: $!";
+    die $e
+        if $fail;
+    seek $fh, 0, 0;
+    my $content = do { local $/; <$fh> };
+    return $content;
+}
+
 sub test_params {
     my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
     subtest "string: " . dd( \@test_strings ) => sub {
@@ -50,7 +69,7 @@ sub test_params {
             my $name = ($pass ? '' : "don't ") . 'roundtrip ' . dd($params) . ($pass ? '' : ' with bad perl path');
 
             eval {
-                my $out = capture_merged { system quote_system_list(@perl, $dumper, @$params) };
+                my $out = capture { system quote_system_list(@perl, $dumper, @$params) };
                 cmp_ok $out, $cmp, dd $params, "$name as list";
             };
             if (my $e = $@) {
@@ -64,7 +83,7 @@ sub test_params {
                     if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
                     && grep { /[\r\n\0]/ } @$params;
                 eval {
-                    my $out = capture_merged { system quote_system_string(@perl, $dumper, @$params) };
+                    my $out = capture { system quote_system_string(@perl, $dumper, @$params) };
                     cmp_ok $out, $cmp, dd $params, "$name as string";
                 };
                 if (my $e = $@) {
@@ -78,7 +97,7 @@ sub test_params {
                 local $TODO = "newlines don't play well with cmd"
                     if grep { /[\r\n\0]/ } @$params;
                 eval {
-                    my $out = capture_merged { system quote_system_cmd(@perl, $dumper, @$params) };
+                    my $out = capture { system quote_system_cmd(@perl, $dumper, @$params) };
                     cmp_ok $out, $cmp, dd $params, "$name as cmd";
                 };
                 if (my $e = $@) {
