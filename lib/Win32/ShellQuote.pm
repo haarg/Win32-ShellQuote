@@ -114,7 +114,7 @@ Win32::ShellQuote - Quote argument lists for Win32
 
 =head1 DESCRIPTION
 
-Quotes argument lists to be used in Win32 in a several different
+Quotes argument lists to be used in Win32 in several different
 situations.
 
 Windows passes its arguments as a single string instead of an array
