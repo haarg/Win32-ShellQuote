@@ -29,6 +29,7 @@ my %META = (
   'name' => 'Win32-ShellQuote',
   'license' => 'perl_5',
   'dynamic_config' => 0,
+  'x_static_install' => 1,
 );
 
 my %MM_ARGS = ();
