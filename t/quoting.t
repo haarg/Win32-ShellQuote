@@ -1,57 +1,30 @@
 use strict;
 use warnings FATAL => 'all';
-use Test::More;
-use File::Basename ();
-use File::Spec;
+use Test::More $^O eq 'MSWin32' ? ()
+  : (skip_all => "can only test for valid unquoting on Win32");
+
+use File::Basename qw(dirname);
+use File::Spec::Functions qw(catfile catdir rel2abs);
 use Win32::ShellQuote qw(:all);
-use File::Temp;
-use File::Copy ();
+use File::Temp qw(tempdir);
+use File::Copy qw(copy);
 use Cwd ();
+use lib 't/lib';
+use TestUtil;
 
-if ($^O ne 'MSWin32') {
-    plan skip_all => "can only test for valid quoting on Win32";
-}
+my $dumper_orig = rel2abs(catfile(dirname(__FILE__), 'dump_args.pl'));
 
-my $dumper_orig;
-
-BEGIN {
-    $dumper_orig = File::Spec->rel2abs(
-      File::Spec->catfile(File::Basename::dirname(__FILE__), 'dump_args.pl'));
-    require $dumper_orig;
-}
-
-sub TestGuard::DESTROY { $_[0][0]->(); }
 my $cwd = Cwd::cwd;
-my $guard = bless [ sub { chdir $cwd } ], 'TestGuard';
+my $guard = guard { chdir $cwd };
 
-my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
+my $tmpdir = tempdir CLEANUP => 1;
 chdir $tmpdir;
 
-my $test_dir = File::Spec->catdir($tmpdir, "dir with spaces");
+my $test_dir = catdir $tmpdir, "dir with spaces";
 mkdir $test_dir;
 
-my $test_dumper = File::Spec->catfile($test_dir, 'dumper with spaces.pl');
-File::Copy::cp($dumper_orig, $test_dumper);
-
-sub capture (&) {
-    my ($sub) = @_;
-    open my $oldout, '>&', \*STDOUT or die "can't dup STDOUT: $!";
-    open my $olderr, '>&', \*STDERR or die "can't dup STDERR: $!";
-    my ($fh, $filename) = File::Temp::tempfile( 'win32-shellquote-XXXXXX', TMPDIR => 1 );
-    open STDOUT, '>&', $fh or die "can't dup temp fh: $!";;
-    open STDERR, '>&', $fh or die "can't dup temp fh: $!";;
-    my ($e, $fail);
-    if (!eval { $sub->(); 1 }) {
-        ($e, $fail) = ($@, 1);
-    }
-    open STDOUT, '>&', $oldout or die "can't restore STDOUT: $!";
-    open STDERR, '>&', $olderr or die "can't restore STDERR: $!";
-    die $e
-        if $fail;
-    seek $fh, 0, 0;
-    my $content = do { local $/; <$fh> };
-    return $content;
-}
+my $test_dumper = catfile $test_dir, 'dumper with spaces.pl';
+copy $dumper_orig, $test_dumper;
 
 sub test_params {
     my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
@@ -168,21 +141,3 @@ test_params($_) for (
 );
 
 done_testing;
-
-sub make_random_strings {
-    my ( $string_count ) = @_;
-
-    my @charsets = map [ map chr, @{$_} ], [ 32 .. 126 ], [ 10, 13, 32 .. 126 ], [ 1 .. 127 ], [ 1 .. 255 ];
-
-    my @strings = map make_random_string( $charsets[ int rand $#charsets + 1 ] ), 0 .. $string_count;
-
-    return @strings;
-}
-
-sub make_random_string {
-    my ( $chars ) = @_;
-
-    my $string = join '', map $chars->[ rand $#$chars + 1 ], 1 .. int rand 70;
-
-    return $string;
-}
