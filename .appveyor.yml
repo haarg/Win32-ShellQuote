@@ -21,6 +21,7 @@ install:
   - 'call .appveyor.cmd perl_setup'
   - '%perl% -V'
   - '%cpanm% --installdeps -n --with-develop --with-recommends .'
+  - 'set AUTHOR_TESTING=1'
 
 build_script:
   - '%perl% Makefile.PL'
