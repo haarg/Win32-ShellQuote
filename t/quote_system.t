@@ -54,6 +54,8 @@ for my $params (
   [ '"a" "b"', '%PATH%' ],
   [ '"a" ^"b"'          ],
   [ qq["a"\n"b"]        ],
+  [ qq["a"| "b\n"]      ],
+  [ qq[ \n " < ]        ],
   ( $ENV{AUTHOR_TESTING}
     ? map [ make_random_strings( 1 + int rand 3 ) ], 1 .. 20
     : ()

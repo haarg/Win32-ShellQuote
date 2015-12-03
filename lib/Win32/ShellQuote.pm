@@ -96,7 +96,7 @@ sub _has_shell_metachars {
 
     return 1
         if $string =~ /%/;
-    $string =~ s/(['"]).*?(\1|\z)//;
+    $string =~ s/(['"]).*?(\1|\z)//sg;
     return $string =~ /[<>|]/;
 }
 
