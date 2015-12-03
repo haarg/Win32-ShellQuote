@@ -17,6 +17,7 @@ our @EXPORT_OK = qw(
     quote_literal
     cmd_escape
     unquote_native
+    cmd_unescape
 );
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
@@ -140,6 +141,15 @@ sub unquote_native {
     }
 
     return @argv;
+}
+
+sub cmd_unescape {
+    my ($string) = @_;
+
+    no warnings 'uninitialized';
+    $string =~ s/\^(.?)|([^^"]+)|("[^"]*(?:"|\z))/$1$2$3/gs;
+
+    return $string;
 }
 
 1;
