@@ -69,7 +69,7 @@ for my $strings (
   my $want = dd $args;
   my $got = dd [ unquote_native($string) ];
   is $got, $want, "[$name] unquoted as expected";
-  if ($^O eq 'MSWin32') {
+  if ($^O eq 'MSWin32' && $ENV{AUTHOR_TESTING}) {
     $dump ||= quote_system_string($^X, "-It/lib", catfile(dirname(__FILE__), 'dump_args.pl'));
     my $real = capture { system "$dump $string" };
     is $want, $real, "[$name] test data is correct";
