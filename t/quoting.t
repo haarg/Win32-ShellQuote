@@ -1,7 +1,6 @@
 use strict;
 use warnings FATAL => 'all';
-use Test::More $^O eq 'MSWin32' ? ()
-  : (skip_all => "can only test for valid unquoting on Win32");
+use Test::More;
 
 use File::Basename qw(dirname);
 use File::Spec::Functions qw(catfile catdir rel2abs);
@@ -12,133 +11,297 @@ use Cwd ();
 use lib 't/lib';
 use TestUtil;
 
-my $tlib = rel2abs('t/lib');
-my $dumper_orig = rel2abs(catfile(dirname(__FILE__), 'dump_args.pl'));
+for my $test (
+  {
+    args    => [ qq[a] ],
+    cmd     => qq[^"a^"],
+    native  => qq["a"],
+    system  => qq["a"],
+  },
+  {
+    args    => [ qq[a b] ],
+    cmd     => qq[^"a b^"],
+    native  => qq["a b"],
+    system  => qq["a b"],
+  },
+  {
+    args    => [ qq["a b"] ],
+    cmd     => qq[^"\\^"a b\\^"^"],
+    native  => qq["\\"a b\\""],
+    system  => qq["\\"a b\\""],
+  },
+  {
+    args    => [ qq["a" b] ],
+    cmd     => qq[^"\\^"a\\^" b^"],
+    native  => qq["\\"a\\" b"],
+    system  => qq["\\"a\\" b"],
+  },
+  {
+    args    => [ qq["a" "b"] ],
+    cmd     => qq[^"\\^"a\\^" \\^"b\\^"^"],
+    native  => qq["\\"a\\" \\"b\\""],
+    system  => qq["\\"a\\" \\"b\\""],
+  },
+  {
+    args    => [ qq['a'] ],
+    cmd     => qq[^"'a'^"],
+    native  => qq["'a'"],
+    system  => qq["'a'"],
+  },
+  {
+    args    => [ qq["a] ],
+    cmd     => qq[^"\\^"a^"],
+    native  => qq["\\"a"],
+    system  => qq["\\"a"],
+  },
+  {
+    args    => [ qq["a b] ],
+    cmd     => qq[^"\\^"a b^"],
+    native  => qq["\\"a b"],
+    system  => qq["\\"a b"],
+  },
+  {
+    args    => [ qq['a] ],
+    cmd     => qq[^"'a^"],
+    native  => qq["'a"],
+    system  => qq["'a"],
+  },
+  {
+    args    => [ qq['a b] ],
+    cmd     => qq[^"'a b^"],
+    native  => qq["'a b"],
+    system  => qq["'a b"],
+  },
+  {
+    args    => [ qq['a b"] ],
+    cmd     => qq[^"'a b\\^"^"],
+    native  => qq["'a b\\""],
+    system  => qq["'a b\\""],
+  },
+  {
+    args    => [ qq[\\a] ],
+    cmd     => qq[^"\\a^"],
+    native  => qq["\\a"],
+    system  => qq["\\a"],
+  },
+  {
+    args    => [ qq[\\"a] ],
+    cmd     => qq[^"\\\\\\^"a^"],
+    native  => qq["\\\\\\"a"],
+    system  => qq["\\\\\\"a"],
+  },
+  {
+    args    => [ qq[\\ a] ],
+    cmd     => qq[^"\\ a^"],
+    native  => qq["\\ a"],
+    system  => qq["\\ a"],
+  },
+  {
+    args    => [ qq[\\ "' a] ],
+    cmd     => qq[^"\\ \\^"' a^"],
+    native  => qq["\\ \\"' a"],
+    system  => qq["\\ \\"' a"],
+  },
+  {
+    args    => [ qq[\\ "' a], qq[>\\] ],
+    cmd     => qq[^"\\ \\^"' a^" ^"^>\\\\^"],
+    native  => qq["\\ \\"' a" ">\\\\"],
+    system  => qq[^"\\ \\^"' a^" ^"^>\\\\^"],
+  },
+  {
+    args    => [ qq[%a%] ],
+    cmd     => qq[^"^%a^%^"],
+    native  => qq["%a%"],
+    system  => qq[^"^%a^%^"],
+  },
+  {
+    args    => [ qq[%a b] ],
+    cmd     => qq[^"^%a b^"],
+    native  => qq["%a b"],
+    system  => qq[^"^%a b^"],
+  },
+  {
+    args    => [ qq[\\%a b] ],
+    cmd     => qq[^"\\^%a b^"],
+    native  => qq["\\%a b"],
+    system  => qq[^"\\^%a b^"],
+  },
+  {
+    args    => [ qq[ & help & ] ],
+    cmd     => qq[^" ^& help ^& ^"],
+    native  => qq[" & help & "],
+    system  => qq[" & help & "],
+  },
+  {
+    args    => [ qq[ > out] ],
+    cmd     => qq[^" ^> out^"],
+    native  => qq[" > out"],
+    system  => qq[" > out"],
+  },
+  {
+    args    => [ qq[ | welp] ],
+    cmd     => qq[^" ^| welp^"],
+    native  => qq[" | welp"],
+    system  => qq[" | welp"],
+  },
+  {
+    args    => [ qq[" | welp"] ],
+    cmd     => qq[^"\\^" ^| welp\\^"^"],
+    native  => qq["\\" | welp\\""],
+    system  => qq[^"\\^" ^| welp\\^"^"],
+  },
+  {
+    args    => [ qq[\\" | welp] ],
+    cmd     => qq[^"\\\\\\^" ^| welp^"],
+    native  => qq["\\\\\\" | welp"],
+    system  => qq[^"\\\\\\^" ^| welp^"],
+  },
+  {
+    args    => [ qq[] ],
+    cmd     => qq[^"^"],
+    native  => qq[""],
+    system  => qq[""],
+  },
+  {
+    args    => [ qq[print "foo'o", ' bar"ar'] ],
+    cmd     => qq[^"print \\^"foo'o\\^", ' bar\\^"ar'^"],
+    native  => qq["print \\"foo'o\\", ' bar\\"ar'"],
+    system  => qq["print \\"foo'o\\", ' bar\\"ar'"],
+  },
+  {
+    args    => [ qq[\$PATH = 'foo'; print \$PATH] ],
+    cmd     => qq[^"\$PATH = 'foo'; print \$PATH^"],
+    native  => qq["\$PATH = 'foo'; print \$PATH"],
+    system  => qq["\$PATH = 'foo'; print \$PATH"],
+  },
+  {
+    args    => [ qq[print 'foo'] ],
+    cmd     => qq[^"print 'foo'^"],
+    native  => qq["print 'foo'"],
+    system  => qq["print 'foo'"],
+  },
+  {
+    args    => [ qq[print " \\" "] ],
+    cmd     => qq[^"print \\^" \\\\\\^" \\^"^"],
+    native  => qq["print \\" \\\\\\" \\""],
+    system  => qq["print \\" \\\\\\" \\""],
+  },
+  {
+    args    => [ qq[print " < \\" "] ],
+    cmd     => qq[^"print \\^" ^< \\\\\\^" \\^"^"],
+    native  => qq["print \\" < \\\\\\" \\""],
+    system  => qq[^"print \\^" ^< \\\\\\^" \\^"^"],
+  },
+  {
+    args    => [ qq[print " \\" < "] ],
+    cmd     => qq[^"print \\^" \\\\\\^" ^< \\^"^"],
+    native  => qq["print \\" \\\\\\" < \\""],
+    system  => qq[^"print \\^" \\\\\\^" ^< \\^"^"],
+  },
+  {
+    args    => [ qq[print " < \\"\\" < \\" < \\" < "] ],
+    cmd     => qq[^"print \\^" ^< \\\\\\^"\\\\\\^" ^< \\\\\\^" ^< \\\\\\^" ^< \\^"^"],
+    native  => qq["print \\" < \\\\\\"\\\\\\" < \\\\\\" < \\\\\\" < \\""],
+    system  => qq[^"print \\^" ^< \\\\\\^"\\\\\\^" ^< \\\\\\^" ^< \\\\\\^" ^< \\^"^"],
+  },
+  {
+    args    => [ qq[print " < \\" | \\" < | \\" < \\" < "] ],
+    cmd     => qq[^"print \\^" ^< \\\\\\^" ^| \\\\\\^" ^< ^| \\\\\\^" ^< \\\\\\^" ^< \\^"^"],
+    native  => qq["print \\" < \\\\\\" | \\\\\\" < | \\\\\\" < \\\\\\" < \\""],
+    system  => qq[^"print \\^" ^< \\\\\\^" ^| \\\\\\^" ^< ^| \\\\\\^" ^< \\\\\\^" ^< \\^"^"],
+  },
+  {
+    args    => [ qq[print q[ &<>^|()\@ ! ]] ],
+    cmd     => qq[^"print q[ ^&^<^>^^^|^(^)\@ ^! ]^"],
+    native  => qq["print q[ &<>^|()\@ ! ]"],
+    system  => qq["print q[ &<>^|()\@ ! ]"],
+  },
+  {
+    args    => [ qq[print q[ &<>^|\@()!"&<>^|\@()! ]] ],
+    cmd     => qq[^"print q[ ^&^<^>^^^|\@^(^)^!\\^"^&^<^>^^^|\@^(^)^! ]^"],
+    native  => qq["print q[ &<>^|\@()!\\"&<>^|\@()! ]"],
+    system  => qq[^"print q[ ^&^<^>^^^|\@^(^)^!\\^"^&^<^>^^^|\@^(^)^! ]^"],
+  },
+  {
+    args    => [ qq[print q[ "&<>^|\@() !"&<>^|\@() !" ]] ],
+    cmd     => qq[^"print q[ \\^"^&^<^>^^^|\@^(^) ^!\\^"^&^<^>^^^|\@^(^) ^!\\^" ]^"],
+    native  => qq["print q[ \\"&<>^|\@() !\\"&<>^|\@() !\\" ]"],
+    system  => qq[^"print q[ \\^"^&^<^>^^^|\@^(^) ^!\\^"^&^<^>^^^|\@^(^) ^!\\^" ]^"],
+  },
+  {
+    args    => [ qq[print q[ "C:\\TEST A\\" ]] ],
+    cmd     => qq[^"print q[ \\^"C:\\TEST A\\\\\\^" ]^"],
+    native  => qq["print q[ \\"C:\\TEST A\\\\\\" ]"],
+    system  => qq["print q[ \\"C:\\TEST A\\\\\\" ]"],
+  },
+  {
+    args    => [ qq[print q[ "C:\\TEST %&^ A\\" ]] ],
+    cmd     => qq[^"print q[ \\^"C:\\TEST ^%^&^^ A\\\\\\^" ]^"],
+    native  => qq["print q[ \\"C:\\TEST %&^ A\\\\\\" ]"],
+    system  => qq[^"print q[ \\^"C:\\TEST ^%^&^^ A\\\\\\^" ]^"],
+  },
+  {
+    args    => [ qq[\n] ],
+    cmd     => undef,
+    native  => qq["\n"],
+    system  => qq["\n"],
+  },
+  {
+    args    => [ qq[a\nb] ],
+    cmd     => undef,
+    native  => qq["a\nb"],
+    system  => qq["a\nb"],
+  },
+  {
+    args    => [ qq[a\rb] ],
+    cmd     => undef,
+    native  => qq["a\rb"],
+    system  => qq["a\rb"],
+  },
+  {
+    args    => [ qq[a\nb > welp] ],
+    cmd     => undef,
+    native  => qq["a\nb > welp"],
+    system  => undef
+  },
+  {
+    args    => [ qq[a > welp\n219] ],
+    cmd     => undef,
+    native  => qq["a > welp\n219"],
+    system  => undef
+  },
+  {
+    args    => [ qq[a"b\nc] ],
+    cmd     => undef,
+    native  => qq["a\\"b\nc"],
+    system  => qq["a\\"b\nc"],
+  },
+  {
+    args    => [ qq[a\fb] ],
+    cmd     => qq[^"a\fb^"],
+    native  => qq["a\fb"],
+    system  => qq["a\fb"],
+  },
+  {
+    args    => [ qq[a\x0bb] ],
+    cmd     => qq[^"a\x0bb^"],
+    native  => qq["a\x0bb"],
+    system  => qq["a\x0bb"],
+  },
+  {
+    args    => [ qq[a\x{85}b] ],
+    cmd     => qq[^"a\x{85}b^"],
+    native  => qq["a\x{85}b"],
+    system  => qq["a\x{85}b"],
+  }
+) {
+  my $name = dd($test->{args});
+  my $native  = eval { quote_native(        @{ $test->{args} } ) };
+  my $cmd     = eval { quote_cmd(           @{ $test->{args} } ) };
+  my $system  = eval { quote_system_string( @{ $test->{args} } ) };
 
-my $cwd = Cwd::cwd;
-my $guard = guard { chdir $cwd };
-
-my $tmpdir = tempdir CLEANUP => 1;
-chdir $tmpdir;
-
-my $test_dir = catdir $tmpdir, "dir with spaces";
-mkdir $test_dir;
-
-my $test_dumper = catfile $test_dir, 'dumper with spaces.pl';
-copy $dumper_orig, $test_dumper;
-
-sub test_params {
-    my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
-    subtest "string: " . dd( \@test_strings ) => sub {
-        plan tests => 2*2*3*3;
-        for my $perl ([1, $^X, "-I$tlib"], [0, 'IF', 'NOT', 'foo==bar', $^X, "-I$tlib"]) {
-            my ($pass, @perl) = @$perl;
-            my $cmp = $pass ? 'eq' : 'ne';
-            note "using perl: @perl";
-
-        for my $dumper ($dumper_orig, $test_dumper) {
-            note "using dumper: $dumper";
-
-        for my $params ( [@test_strings], [@test_strings, '>out'], [@test_strings, '%']  ) {
-            my $name = ($pass ? '' : "don't ") . 'roundtrip ' . dd($params) . ($pass ? '' : ' with bad perl path');
-
-            eval {
-                my $out = capture { system quote_system_list(@perl, $dumper, @$params) };
-                cmp_ok $out, $cmp, dd $params, "$name as list";
-            };
-            if (my $e = $@) {
-                fail "$name as list";
-                chomp $e;
-                diag $e;
-            }
-
-            TODO: {
-                local $TODO = 'forced to use cmd, but using non-escapable characters'
-                    if Win32::ShellQuote::_has_shell_metachars(quote_native(@$params))
-                    && grep { /[\r\n\0]/ } @$params;
-                eval {
-                    my $out = capture { system quote_system_string(@perl, $dumper, @$params) };
-                    cmp_ok $out, $cmp, dd $params, "$name as string";
-                };
-                if (my $e = $@) {
-                    fail "$name as string";
-                    chomp $e;
-                    diag $e;
-                }
-            }
-
-            TODO: {
-                local $TODO = "newlines don't play well with cmd"
-                    if grep { /[\r\n\0]/ } @$params;
-                eval {
-                    my $out = capture { system quote_system_cmd(@perl, $dumper, @$params) };
-                    cmp_ok $out, $cmp, dd $params, "$name as cmd";
-                };
-                if (my $e = $@) {
-                    fail "$name as cmd";
-                    chomp $e;
-                    diag $e;
-                }
-            }
-        } } }
-    };
+  is $native, $test->{native}, "$name as native";
+  is $cmd,    $test->{cmd},    "$name as cmd";
+  is $system, $test->{system}, "$name as system";
 }
-
-test_params($_) for (
-    'a',
-    'a b',
-    '"a b"',
-    '"a" b',
-    '"a" "b"',
-    '\'a\'',
-    '"a',
-    '"a b',
-    '\'a',
-    '\'a b',
-    '\'a b"',
-    '\\a',
-    '\\"a',
-    '\\ a',
-    '\\ "\' a',
-    [ '\\ "\' a', ">\\"],
-    '%a%',
-    '%a b',
-    '\%a b',
-    ' & help & ',
-    ' > out',
-    ' | welp',
-    '" | welp"',
-    '\" | welp',
-    "",
-
-# from EUMM.  Not all meant to be used like this, but still good test material
-    q{print "foo'o", ' bar"ar'},
-    q{$PATH = 'foo'; print $PATH},
-    q{print 'foo'},
-    q{print " \" "},
-    q{print " < \" "},
-    q{print " \" < "},
-    q{print " < \"\" < \" < \" < "},
-    q{print " < \" | \" < | \" < \" < "},
-
-    q{print q[ &<>^|()@ ! ]},
-    q{print q[ &<>^|@()!"&<>^|@()! ]},
-    q{print q[ "&<>^|@() !"&<>^|@() !" ]},
-    q{print q[ "C:\TEST A\" ]},
-    q{print q[ "C:\TEST %&^ A\" ]},
-
-    "\n",
-    "a\nb",
-    "a\rb",
-    "a\nb > welp",
-    "a > welp\n219",
-    "a\"b\nc",
-
-    "a\fb",
-    "a\x0bb",
-    "a\x{85}b",
-
-    $ENV{AUTHOR_TESTING} ? make_random_strings( 20 ) : (),
-);
-
 done_testing;
