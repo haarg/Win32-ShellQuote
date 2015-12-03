@@ -12,6 +12,7 @@ use Cwd ();
 use lib 't/lib';
 use TestUtil;
 
+my $tlib = rel2abs('t/lib');
 my $dumper_orig = rel2abs(catfile(dirname(__FILE__), 'dump_args.pl'));
 
 my $cwd = Cwd::cwd;
@@ -30,7 +31,7 @@ sub test_params {
     my @test_strings = ref $_[0] ? @{ $_[0] } : @_;
     subtest "string: " . dd( \@test_strings ) => sub {
         plan tests => 2*2*3*3;
-        for my $perl ([1, $^X], [0, 'IF', 'NOT', 'foo==bar', $^X]) {
+        for my $perl ([1, $^X, "-I$tlib"], [0, 'IF', 'NOT', 'foo==bar', $^X, "-I$tlib"]) {
             my ($pass, @perl) = @$perl;
             my $cmp = $pass ? 'eq' : 'ne';
             note "using perl: @perl";
