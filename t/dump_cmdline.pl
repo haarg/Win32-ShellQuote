@@ -11,4 +11,6 @@ BEGIN {
   }
 }
 
-print GetCommandLine();
+my $cmdline = GetCommandLine();
+$cmdline =~ s/.* -- //;
+print $cmdline;

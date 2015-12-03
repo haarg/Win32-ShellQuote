@@ -39,10 +39,9 @@ for my $strings (
   is $got, $want, "[$name] unquoted as expected"
     if defined $want;
   if ($can_get_cmdline) {
-    $dump ||= quote_system_string($^X, catfile(dirname(__FILE__), 'dump_cmdline.pl'));
+    $dump ||= quote_system_string($^X, catfile(dirname(__FILE__), 'dump_cmdline.pl')) . " --";
     $dump_run ||= '%PATH:~0,0%' . cmd_escape($dump);
     my $real = capture { system "$dump_run $string" };
-    $real =~ s/^\Q$dump\E //;
     is $want, $real, "[$name] test data is correct"
       if defined $want;
     is $got, $real, "[$name] unquoted as real";
