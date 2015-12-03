@@ -20,7 +20,7 @@ sub dd ($) {
   local $Data::Dumper::Terse = 1;
   local $Data::Dumper::Useqq = 1;
   local $Data::Dumper::Sortkeys = 1;
-  local $Data::Dumper::Useqq = grep { /[\r\n']/ } ref $params ? @$params : $params;
+  local $Data::Dumper::Useqq = 1;
 
   my $out = Dumper($params);
   chomp $out;
