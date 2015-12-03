@@ -303,5 +303,6 @@ for my $test (
   is $native, $test->{native}, "$name as native";
   is $cmd,    $test->{cmd},    "$name as cmd";
   is $system, $test->{system}, "$name as system";
+  #TODO: AUTHOR_TESTING to verify valid data
 }
 done_testing;
