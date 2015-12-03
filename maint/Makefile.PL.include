@@ -7,3 +7,4 @@ use ExtUtils::MakeMaker 6.58;
 author 'haarg - Graham Knop (cpan:HAARG) <haarg@haarg.org>';
 
 manifest_include t => 'dump_args.pl';
+manifest_include t => 'dump_cmdline.pl';

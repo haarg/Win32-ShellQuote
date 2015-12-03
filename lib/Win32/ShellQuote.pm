@@ -16,6 +16,7 @@ our @EXPORT_OK = qw(
     quote_system_cmd
     quote_literal
     cmd_escape
+    unquote_native
 );
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
@@ -96,6 +97,49 @@ sub _has_shell_metachars {
         if $string =~ /%/;
     $string =~ s/(['"]).*?(\1|\z)//;
     return $string =~ /[<>|]/;
+}
+
+sub unquote_native {
+    local ($_) = @_;
+    my @argv;
+
+    my $length = length
+        or return @argv;
+
+    m/\G\s*/gc;
+
+    ARGS: until ( pos == $length ) {
+        my $quote_mode;
+        my $arg = '';
+        CHARS: until ( pos == $length ) {
+            if ( m/\G((?:\\\\)+)(?=\\?(")?)/gc ) {
+                if (defined $2) {
+                    $arg .= '\\' x (length($1) / 2);
+                }
+                else {
+                    $arg .= $1;
+                }
+            }
+            elsif ( m/\G\\"/gc ) {
+                $arg .= '"';
+            }
+            elsif ( m/\G"/gc ) {
+                if ( $quote_mode && m/\G"/gc ) {
+                    $arg .= '"';
+                }
+                $quote_mode = !$quote_mode;
+            }
+            elsif ( !$quote_mode && m/\G\s+\z?/gc ) {
+                last;
+            }
+            elsif ( m/\G(.)/sgc ) {
+                $arg .= $1;
+            }
+        }
+        push @argv, $arg;
+    }
+
+    return @argv;
 }
 
 1;
