@@ -10,7 +10,9 @@ use lib 't/lib';
 use TestUtil;
 
 my $can_get_cmdline;
-if ($^O eq 'MSWin32') {
+if (!$ENV{AUTHOR_TESTING}) {
+}
+elsif ($^O eq 'MSWin32') {
   if (eval { require Win32::API }) {
     $can_get_cmdline = 1;
     note 'using Win32::API to check cmd.exe behavior';
