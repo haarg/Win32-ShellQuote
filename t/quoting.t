@@ -2,12 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-use File::Basename qw(dirname);
-use File::Spec::Functions qw(catfile catdir rel2abs);
 use Win32::ShellQuote qw(:all);
-use File::Temp qw(tempdir);
-use File::Copy qw(copy);
-use Cwd ();
 use lib 't/lib';
 use TestUtil;
 
