@@ -1,5 +1,11 @@
 Release history for Win32-ShellQuote
 
+  - add functions for splitting a quoted string and unescaping a cmd string.
+  - Split tests into quoting tests and system call tests.  Some of the tests
+    will only be run in author mode.  This greatly reduces the time taken by
+    the tests.
+  - fix shell metacharacter detection with newlines and multiple quoted sections.
+
 0.002003 - 2015-04-06
   - drop all non-core prerequisites
 
