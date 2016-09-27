@@ -130,7 +130,7 @@ sub unquote_native {
                 }
                 $quote_mode = !$quote_mode;
             }
-            elsif ( !$quote_mode && m/\G\s+\z?/gc ) {
+            elsif ( !$quote_mode && m/\G\s+/gc ) {
                 last;
             }
             elsif ( m/\G(.)/sgc ) {
