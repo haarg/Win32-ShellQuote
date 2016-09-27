@@ -1,5 +1,7 @@
 Release history for Win32-ShellQuote
 
+  - fix compatibility with perl 5.6
+
 0.003000 - 2015-12-05
   - add functions for splitting a quoted string and unescaping a cmd string.
   - Split tests into quoting tests and system call tests.  Some of the tests
