@@ -1,5 +1,6 @@
 Release history for Win32-ShellQuote
 
+0.003001 - 2016-09-27
   - fix compatibility with perl 5.6
 
 0.003000 - 2015-12-05
