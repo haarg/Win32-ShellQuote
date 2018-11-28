@@ -242,6 +242,16 @@ internals to accurately perform its work.
 
 =back
 
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<String::ShellQuote>
+
+=item * L<Text::ParseWords>
+
+=back
+
 =head1 AUTHOR
 
 haarg - Graham Knop (cpan:HAARG) <haarg@haarg.org>
