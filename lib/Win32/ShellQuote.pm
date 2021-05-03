@@ -22,7 +22,7 @@ our @EXPORT_OK = qw(
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
 sub quote_native {
-    return join q{ }, quote_system_list(@_);
+    return join q{ }, map quote_literal($_), @_;
 }
 
 sub quote_cmd {
